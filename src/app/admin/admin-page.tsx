@@ -1,18 +1,6 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import Link from "next/link";
-
-const AdminForm = dynamic(() => import("~/components/AdminForm"), {
-  ssr: false,
-});
-const LandingPageEditor = dynamic(
-  () => import("~/components/LandingPageEditor"),
-  { ssr: false }
-);
-const PreviewPane = dynamic(() => import("~/components/PreviewPane"), {
-  ssr: false,
-});
 
 export default function AdminPage({
   user,
