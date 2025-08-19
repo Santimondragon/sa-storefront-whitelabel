@@ -4,7 +4,9 @@ import { type Metadata } from "next";
 import { Geist } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 
+import { CartProvider } from "~/contexts/CartProvider";
 import { TRPCReactProvider } from "~/trpc/react";
+
 import Navbar from "~/components/Navbar";
 import Footer from "~/components/Footer";
 
@@ -25,13 +27,15 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${geist.variable}`}>
       <body>
-        <TRPCReactProvider>
-          <ClerkProvider dynamic>
-            <Navbar />
-          </ClerkProvider>
-          <main className="container mx-auto px-4 py-6 min-h-[70vh]">{children}</main>
-          <Footer />
-        </TRPCReactProvider>
+        <ClerkProvider dynamic>
+          <TRPCReactProvider>
+            <CartProvider>
+              <Navbar />
+              <main className="container mx-auto px-4 py-6 min-h-[70vh]">{children}</main>
+              <Footer />
+            </CartProvider>
+          </TRPCReactProvider>
+        </ClerkProvider>
       </body>
     </html>
   );

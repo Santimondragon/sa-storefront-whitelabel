@@ -11,6 +11,8 @@ export const env = createEnv({
     CLERK_SECRET_KEY: z.string().min(1),
     SHOPIFY_STORE_DOMAIN: z.string().min(1),
     SHOPIFY_STOREFRONT_ACCESS_TOKEN: z.string().min(1),
+    SHOPIFY_ADMIN_API_TOKEN: z.string().min(1),
+    ADMIN_BYPASS: z.enum(["true", "false"]).optional(),
   },
 
   /**
@@ -32,6 +34,8 @@ export const env = createEnv({
     CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
     SHOPIFY_STORE_DOMAIN: process.env.SHOPIFY_STORE_DOMAIN,
     SHOPIFY_STOREFRONT_ACCESS_TOKEN: process.env.SHOPIFY_STOREFRONT_ACCESS_TOKEN,
+    SHOPIFY_ADMIN_API_TOKEN: process.env.SHOPIFY_ADMIN_API_TOKEN,
+    ADMIN_BYPASS: process.env.ADMIN_BYPASS,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially

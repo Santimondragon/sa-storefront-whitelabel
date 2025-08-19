@@ -5,21 +5,21 @@ import { api } from "~/trpc/server";
 import { Button } from "~/components/ui/button";
 import { formatPrice } from "~/utils/formatPrice";
 
-type CartLine = {
+interface CartLine {
   id: string;
   quantity: number;
   merchandise: {
     id: string;
-    title?: string;
-    price?: {
+    title: string;
+    price: {
       amount: string;
       currencyCode: string;
     };
-    product?: {
-      title?: string;
+    product: {
+      title: string;
     };
   };
-};
+}
 
 export default async function CartPage() {
   let cart;

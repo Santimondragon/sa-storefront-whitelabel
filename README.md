@@ -10,6 +10,15 @@ Full-stack e-commerce storefront built on the T3 Stack (Next.js App Router, tRPC
 - Tailwind + shadcn/ui components
 - Ready for Vercel deployment
 
+## Content Admin Panel
+
+- Route: `/admin` (Clerk-protected; only users with `publicMetadata.role === "admin"` may access)
+- Sections:
+  - Homepage Content: hero title, hero image (file upload → Shopify file_reference), banner text
+  - Landing Pages: select a Shopify Page and edit rich HTML content
+  - Preview: shows current live content from Storefront API
+- Backend: tRPC router `src/server/api/routers/content.ts` integrates Shopify Storefront (read) and Admin (write) APIs
+
 ## Project Structure
 
 ```
@@ -18,6 +27,7 @@ src/
     (auth)/sign-in/[[...sign-in]]/page.tsx
     (auth)/sign-up/[[...sign-up]]/page.tsx
     admin/page.tsx
+    admin/admin-page.tsx
     cart/page.tsx
     products/page.tsx
     products/[handle]/page.tsx
@@ -29,16 +39,21 @@ src/
     ProductCard.tsx
     ProductGrid.tsx
     CartDrawer.tsx
+    AdminForm.tsx
+    LandingPageEditor.tsx
+    PreviewPane.tsx
   server/
     api/
       routers/
         product.ts
         cart.ts
+        content.ts
       root.ts
       trpc.ts
     shopify/
       client.ts
       types.ts
+      adminClient.ts
       queries/
         getProducts.ts
         getProductByHandle.ts
@@ -56,6 +71,7 @@ CLERK_SECRET_KEY=
 
 SHOPIFY_STORE_DOMAIN=your-shop.myshopify.com
 SHOPIFY_STOREFRONT_ACCESS_TOKEN=
+SHOPIFY_ADMIN_API_TOKEN=
 ```
 
 These are validated in `src/env.js` via `@t3-oss/env-nextjs`.
@@ -63,14 +79,25 @@ These are validated in `src/env.js` via `@t3-oss/env-nextjs`.
 ## Shopify Setup
 
 1. In your Shopify admin, create a Storefront API access token.
-2. Note your shop domain (e.g. `your-shop.myshopify.com`).
-3. Add both to `.env`.
+2. In your Shopify admin, create a custom app and generate an Admin API access token. Grant scope for Files and Metafields.
+3. Note your shop domain (e.g. `your-shop.myshopify.com`).
+4. Add all three to `.env`.
+
+### Metafields used
+
+- Shop metafields (homepage):
+  - namespace: `homepage`, key: `hero_title`, type: `single_line_text_field`
+  - namespace: `homepage`, key: `hero_image`, type: `file_reference`
+  - namespace: `homepage`, key: `banner_text`, type: `single_line_text_field`
+- Page metafields (landing pages):
+  - namespace: `landing`, key: `content_html`, type: `rich_text_field`
 
 ## Clerk Setup
 
 1. Create a Clerk application at https://clerk.com/
 2. In Clerk dashboard, copy the Publishable Key and Secret Key into `.env`.
 3. To mark an account as admin, set `publicMetadata.role = "admin"` for that user in Clerk.
+4. Ensure `middleware.ts` matches `/admin(.*)` so Clerk runs on the admin routes.
 
 ## Development
 
@@ -88,6 +115,7 @@ Open http://localhost:3000
 - Router root: `src/server/api/root.ts`
 - Product endpoints: `src/server/api/routers/product.ts`
 - Cart endpoints: `src/server/api/routers/cart.ts`
+- Content endpoints: `src/server/api/routers/content.ts`
 
 ## Images
 

@@ -2,12 +2,11 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { formatPrice } from "~/utils/formatPrice";
-import { api } from "~/trpc/react";
 import { Trash } from "lucide-react";
 
 type Props = {
@@ -19,55 +18,33 @@ type Props = {
     priceRange?: { minVariantPrice?: { amount: string; currencyCode: string } };
     variants?: { edges?: Array<{ node: { id: string } }> };
   };
+  line?: { id: string; quantity: number } | any;
+  pending: boolean;
+  onAdd: (merchandiseId: string) => Promise<void> | void;
+  onUpdateLine: (lineId: string, quantity: number) => Promise<void> | void;
 };
 
-export default function ProductCard({ product }: Props) {
+export default function ProductCard({ product, line, pending, onAdd, onUpdateLine }: Props) {
   const imageUrl = product.featuredImage?.url;
   const price = product.priceRange?.minVariantPrice;
   const variantId = product.variants?.edges?.[0]?.node?.id;
-
-  // Cart data via TRPC React
-  const { data: cart, isLoading: cartLoading } = api.cart.get.useQuery();
-  const utils = api.useUtils();
-  const addItem = api.cart.addItem.useMutation({
-    onSuccess: async () => {
-      await utils.cart.get.invalidate();
-    },
-  });
-  const updateItem = api.cart.updateItem.useMutation({
-    onSuccess: async () => {
-      await utils.cart.get.invalidate();
-    },
-  });
-
-  // Find existing line for this product (by variant id if available, else by handle)
-  const line = useMemo(() => {
-    const edges = cart?.lines?.edges ?? [];
-    if (!edges.length) return undefined;
-    if (variantId) {
-      return edges.find((e: any) => e.node.merchandise?.id === variantId)?.node;
-    }
-    return edges.find((e: any) => e.node.merchandise?.product?.handle === product.handle)?.node;
-  }, [cart, product.handle, variantId]);
 
   const [qty, setQty] = useState<number>(line?.quantity ?? 0);
   useEffect(() => {
     setQty(line?.quantity ?? 0);
   }, [line?.quantity]);
 
-  const pending = addItem.isPending || updateItem.isPending || cartLoading;
-
   const handleAdd = async () => {
-    if (!cart?.id || !variantId) return;
-    await addItem.mutateAsync({ cartId: cart.id, merchandiseId: variantId, quantity: 1 });
+    if (!variantId) return;
+    await onAdd(variantId);
   };
 
   const commitQty = async (next: number) => {
-    if (!cart?.id || !line?.id) return;
+    if (!line?.id) return;
     // Clamp to >= 0 and reasonable max
     const clamped = Math.max(0, Math.min(999, Math.floor(next)));
     setQty(clamped);
-    await updateItem.mutateAsync({ cartId: cart.id, lineId: line.id, quantity: clamped });
+    await onUpdateLine(line.id, clamped);
   };
 
   const dec = () => {
