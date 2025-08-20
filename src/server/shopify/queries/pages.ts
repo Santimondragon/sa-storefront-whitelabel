@@ -26,6 +26,26 @@ export const CREATE_PAGE_MUTATION = /* GraphQL */ `
   }
 `;
 
+export const UPDATE_PAGE_MUTATION = /* GraphQL */ `
+  mutation UpdatePage($id: ID!, $fields: [MetaobjectFieldInput!]!) {
+    metaobjectUpdate(id: $id, metaobject: { fields: $fields }) {
+      metaobject {
+        id
+        handle
+        type
+        fields {
+          key
+          value
+        }
+      }
+      userErrors {
+        field
+        message
+      }
+    }
+  }
+`;
+
 export const GET_PAGES_QUERY = /* GraphQL */ `
   query GetPages($first: Int!) {
     metaobjects(type: "custom_page", first: $first) {

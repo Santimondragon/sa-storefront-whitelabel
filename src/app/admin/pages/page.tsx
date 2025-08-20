@@ -9,7 +9,12 @@ async function createPageAction(formData: FormData) {
   const name = (formData.get("name") ?? "").toString().trim();
   if (!name) return;
 
-  await api.page.create({ name, content: "" });
+  const blankPage = {
+    sections: [],
+    data: {},
+  };
+
+  await api.page.create({ name, content: blankPage });
   revalidatePath("/admin/pages");
 }
 
@@ -37,12 +42,12 @@ export default async function AdminPages() {
             placeholder="Page name"
           />
         </label>
-        <button
+        <Button
           type="submit"
           className="bg-black text-white px-4 py-2 rounded"
         >
           Create Page
-        </button>
+        </Button>
       </form>
 
       <div className="space-y-2">
@@ -64,7 +69,7 @@ export default async function AdminPages() {
                     <div className="text-xs text-gray-600 truncate">/{p.handle}</div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <form action={deletePageAction}>
+                    <form action={deletePageAction} id={p.id}>
                       <input type="hidden" name="id" value={p.id} />
                     </form>
                   </div>
@@ -74,6 +79,7 @@ export default async function AdminPages() {
                   type="submit"
                   title="Delete page"
                   variant="ghost"
+                  form={p.id}
                 >
                   <Trash2Icon />
                 </Button>

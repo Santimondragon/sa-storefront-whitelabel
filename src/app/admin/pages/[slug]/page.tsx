@@ -1,6 +1,6 @@
 import EditorClient from "./editorClient";
 
-export default async function AdminPageEditor({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params;
+export default function AdminPageEditor({ params }: { params: { slug: string } }) {
+  const { slug } = params;
   return <EditorClient slug={slug} />;
 }

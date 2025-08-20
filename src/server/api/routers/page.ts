@@ -3,8 +3,8 @@ import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 import { shopifyAdminFetch } from "~/server/shopify/client";
 
 import {
-  CREATE_PAGE_DEFINITION_MUTATION,
   CREATE_PAGE_MUTATION,
+  UPDATE_PAGE_MUTATION,
   GET_PAGE_BY_HANDLE_QUERY,
   GET_PAGES_QUERY,
   DELETE_PAGE_MUTATION,
@@ -70,6 +70,57 @@ export const pageRouter = createTRPCRouter({
         variables: { first },
       });
       return data.metaobjects.nodes;
+    }),
+
+  update: publicProcedure
+    .input(
+      z.object({
+        id: z.string(), // Shopify metaobject ID
+        name: z.string().optional(),
+        content: z.unknown().optional(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      // Build fields array dynamically
+      const fields: Array<{ key: string; value: string }> = [];
+
+      if (input.name !== undefined) {
+        fields.push({ key: "name", value: input.name });
+      }
+
+      if (input.content !== undefined) {
+        fields.push({
+          key: "content",
+          value: JSON.stringify(input.content ?? {}),
+        });
+      }
+
+      const data = await shopifyAdminFetch<{
+        metaobjectUpdate: {
+          metaobject: {
+            id: string;
+            handle: string;
+            type: string;
+            fields: Array<{ key: string; value: string | null }>;
+          } | null;
+          userErrors: Array<{ field: string[] | null; message: string }>;
+        };
+      }>({
+        query: UPDATE_PAGE_MUTATION,
+        variables: {
+          id: input.id,
+          fields,
+        },
+      });
+
+      const errs = data.metaobjectUpdate.userErrors;
+      if (errs && errs.length) {
+        throw new Error(
+          `UpdatePage error: ${errs.map((e) => e.message).join(", ")}`
+        );
+      }
+
+      return data.metaobjectUpdate.metaobject;
     }),
 
   delete: publicProcedure
