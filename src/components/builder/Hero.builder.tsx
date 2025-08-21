@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { heroSchema, type Hero, type CTA } from "~/lib/schemas";
-import { CTABuilder } from "./CTA.builder";
+import { heroSchema, type Hero } from "~/lib/schemas";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
+import { Button } from "../ui/button";
+import { CTABuilder } from "./CTA.builder";
 import {
   Select,
   SelectContent,
@@ -16,9 +16,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import { Label } from "../ui/label";
-import { Button } from "../ui/button";
-import { X } from "lucide-react"; // For the remove icon
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from "../ui/form";
+import { useEffect } from "react";
 
 type Props = {
   defaultValue?: Hero;
@@ -26,152 +32,275 @@ type Props = {
 };
 
 export function HeroBuilder({ defaultValue, onSave }: Props) {
-  const [ctas, setCtas] = useState<CTA[]>(defaultValue?.cta || []);
-  const [editingCtaIndex, setEditingCtaIndex] = useState<number | null>(null);
-
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    setValue,
-    watch,
-  } = useForm<Hero>({
+  const form = useForm<Hero>({
     resolver: zodResolver(heroSchema),
-    defaultValues: defaultValue,
+    defaultValues: {
+      variant: "color",
+      ...defaultValue,
+    },
   });
 
-  const handleAddOrUpdateCTA = (cta: CTA) => {
-    if (editingCtaIndex !== null) {
-      setCtas((prevCtas) =>
-        prevCtas.map((item, index) => (index === editingCtaIndex ? cta : item))
-      );
-      setEditingCtaIndex(null); // Exit editing mode
-    } else {
-      setCtas((prevCtas) => [...prevCtas, cta]);
+  useEffect(() => {
+    if (defaultValue) {
+      form.reset(defaultValue);
     }
-  };
+  }, [defaultValue, form]);
 
-  const removeCTA = (indexToRemove: number) => {
-    setCtas((prevCtas) => prevCtas.filter((_, index) => index !== indexToRemove));
-    if (editingCtaIndex === indexToRemove) {
-      setEditingCtaIndex(null); // If the removed CTA was being edited, clear editing state
-    }
-  };
-
-  const editCTA = (indexToEdit: number) => {
-    setEditingCtaIndex(indexToEdit);
-  };
-
-  const handleSelectChange = (name: keyof Hero, value: string) => {
-    setValue(name, value as any, { shouldValidate: true });
-  };
+  const variant = form.watch("variant");
 
   return (
-    <form
-      onSubmit={handleSubmit((data) => onSave({ ...data, cta: ctas }))}
-      className="space-y-4"
-    >
-      <div>
-        <Label htmlFor="hero-title">Title</Label>
-        <Input id="hero-title" {...register("title")} />
-        {errors.title && <p className="text-red-500 text-sm">{errors.title.message}</p>}
-      </div>
+    <Form {...form}>
+      <form
+        className="space-y-6"
+        onSubmit={form.handleSubmit((data) => {
+          onSave(data);
+          form.reset(data);
+        })}
+      >
+        {/* Title */}
+        <FormField
+          control={form.control}
+          name="title"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Title</FormLabel>
+              <FormControl>
+                <Input placeholder="Enter title" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-      <div>
-        <Label htmlFor="hero-subtitle">Subtitle</Label>
-        <Input id="hero-subtitle" {...register("subtitle")} />
-        {errors.subtitle && (
-          <p className="text-red-500 text-sm">{errors.subtitle.message}</p>
-        )}
-      </div>
+        {/* Subtitle */}
+        <FormField
+          control={form.control}
+          name="subtitle"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Subtitle</FormLabel>
+              <FormControl>
+                <Input placeholder="Enter subtitle" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-      <div>
-        <Label htmlFor="hero-description">Description</Label>
-        <Textarea id="hero-description" {...register("description")} />
-        {errors.description && (
-          <p className="text-red-500 text-sm">{errors.description.message}</p>
-        )}
-      </div>
+        {/* Description */}
+        <FormField
+          control={form.control}
+          name="description"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Description</FormLabel>
+              <FormControl>
+                <Textarea placeholder="Enter description" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-      <div>
-        <Label htmlFor="hero-variant">Variant</Label>
-        <Select
-          onValueChange={(value) => handleSelectChange("variant", value)}
-          defaultValue={watch("variant") || "color"}
-        >
-          <SelectTrigger className="w-full" id="hero-variant">
-            <SelectValue placeholder="Select a variant" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              <SelectGroupLabel>Variants</SelectGroupLabel>
-              <SelectItem value="color">Color</SelectItem>
-              <SelectItem value="gradient">Gradient</SelectItem>
-              <SelectItem value="image">Image</SelectItem>
-              <SelectItem value="full-image">Full Image</SelectItem>
-              <SelectItem value="image-carousel">Image Carousel</SelectItem>
-              <SelectItem value="full-image-carousel">Full Image Carousel</SelectItem>
-            </SelectGroup>
-          </SelectContent>
-        </Select>
-        {errors.variant && <p className="text-red-500 text-sm">{errors.variant.message}</p>}
-      </div>
+        {/* Variant */}
+        <FormField
+          control={form.control}
+          name="variant"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Variant</FormLabel>
+              <FormControl>
+                <Select
+                  value={field.value}
+                  onValueChange={field.onChange}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a variant" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectGroupLabel>Variants</SelectGroupLabel>
+                      <SelectItem value="color">Color</SelectItem>
+                      <SelectItem value="gradient">Gradient</SelectItem>
+                      <SelectItem value="image">Image</SelectItem>
+                      <SelectItem value="full-image">Full Image</SelectItem>
+                      <SelectItem value="image-carousel">
+                        Image Carousel
+                      </SelectItem>
+                      <SelectItem value="full-image-carousel">
+                        Full Image Carousel
+                      </SelectItem>
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-      {/* CTA Management */}
-      <div>
-        <h3 className="text-lg font-semibold mb-2">Call to Actions (Max 2)</h3>
-        {ctas.length > 0 && (
-          <ul className="space-y-2 mb-4">
-            {ctas.map((cta, i) => (
-              <li
-                key={i}
-                className="flex items-center justify-between p-3 border rounded-md bg-muted/20"
-              >
-                <span className="font-medium">{cta.name || "Untitled CTA"}</span>
-                <div className="flex space-x-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => editCTA(i)}
+        {/* Variant-specific fields */}
+        {variant === "color" && (
+          <FormField
+            control={form.control}
+            name="color"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Color</FormLabel>
+                <FormControl>
+                  <Select
+                    value={field.value}
+                    onValueChange={field.onChange}
                   >
-                    Edit
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="icon"
-                    onClick={() => removeCTA(i)}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              </li>
-            ))}
-          </ul>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Choose a color" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="red">Red</SelectItem>
+                      <SelectItem value="blue">Blue</SelectItem>
+                      <SelectItem value="green">Green</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         )}
 
-        {ctas.length < 2 && (
-          <>
-            <h4 className="text-md font-medium mb-2">
-              {editingCtaIndex !== null ? "Edit CTA" : "Add New CTA"}
-            </h4>
-            <CTABuilder
-              onSave={handleAddOrUpdateCTA}
-              defaultValue={editingCtaIndex !== null ? ctas[editingCtaIndex] : undefined}
-              key={editingCtaIndex} // Key to re-render CTABuilder when editing starts/stops
+        {variant === "gradient" && (
+          <FormField
+            control={form.control}
+            name="gradient"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Gradient</FormLabel>
+                <FormControl>
+                  <Select
+                    value={field.value}
+                    onValueChange={field.onChange}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Choose a gradient" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="sunset">Sunset</SelectItem>
+                      <SelectItem value="ocean">Ocean</SelectItem>
+                      <SelectItem value="forest">Forest</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+
+        {(variant === "image" || variant === "full-image") && (
+          <FormField
+            control={form.control}
+            name="image"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Image</FormLabel>
+                <FormControl>
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        // TODO: replace with upload service
+                        const fakeUrl = URL.createObjectURL(file);
+                        form.setValue("image", fakeUrl, {
+                          shouldValidate: true,
+                          shouldDirty: true,
+                        });
+                      }
+                    }}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+
+        {(variant === "image-carousel" ||
+          variant === "full-image-carousel") && (
+            <FormField
+              control={form.control}
+              name="images"
+              render={() => (
+                <FormItem>
+                  <FormLabel>Images</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={(e) => {
+                        const files = Array.from(e.target.files || []);
+                        if (files.length > 0) {
+                          const fakeUrls = files.map((f) =>
+                            URL.createObjectURL(f)
+                          );
+                          form.setValue("images", fakeUrls, {
+                            shouldValidate: true,
+                            shouldDirty: true,
+                          });
+                        }
+                      }}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </>
-        )}
+          )}
 
-        {ctas.length >= 2 && editingCtaIndex === null && (
-          <p className="text-sm text-muted-foreground">Maximum of 2 CTAs reached.</p>
-        )}
-      </div>
+        {/* CTA Builder */}
+        <FormField
+          control={form.control}
+          name="cta"
+          render={() => (
+            <FormItem>
+              <FormLabel>Call to Actions (Max 2)</FormLabel>
+              <FormControl>
+                <CTABuilder
+                  control={form.control}
+                  name="cta"
+                  max={2}
+                  errors={form.formState.errors.cta}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-      <Button type="submit" className="w-full">
-        Save Hero
-      </Button>
-    </form>
+        {/* Action Buttons */}
+        {defaultValue && form.formState.isDirty && (
+          <div className="flex gap-2">
+            <Button
+              type="submit"
+              className="flex-1"
+              disabled={defaultValue ? !form.formState.isDirty : false}
+            >
+              Save Hero
+            </Button>
+
+            <Button
+              type="button"
+              variant="outline"
+              className="flex-1"
+              onClick={() => form.reset(defaultValue)}
+            >
+              Reset
+            </Button>
+          </div>
+        )}
+      </form>
+    </Form>
   );
 }

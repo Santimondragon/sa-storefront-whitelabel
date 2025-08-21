@@ -19,12 +19,21 @@ export const ctaSchema = z.object({
 
 export type CTA = z.infer<typeof ctaSchema>;
 
+export const ctasSchema = z.object({
+  ctas: z
+    .array(ctaSchema)
+    .min(1, "At least 1 CTA is required")
+    .max(2, "Maximum of 2 CTAs allowed"),
+});
+
+export type CTAsForm = z.infer<typeof ctasSchema>;
+
 // Hero Schema
 export const heroSchema = z.object({
   title: z.string().min(1, "Title is required"),
   subtitle: z.string().optional(),
   description: z.string().optional(),
-  cta: z.array(ctaSchema).optional(),
+  cta: z.array(ctaSchema).max(2, "Maximum of 2 CTAs allowed").optional(),
   variant: z.enum([
     "color",
     "gradient",

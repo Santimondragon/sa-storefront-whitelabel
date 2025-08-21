@@ -31,7 +31,7 @@ export default function RootLayout({
           <TRPCReactProvider>
             <CartProvider>
               <Navbar />
-              <main className="container mx-auto px-4 py-6 min-h-[70vh]">{children}</main>
+              <main className="">{children}</main>
               <Footer />
             </CartProvider>
           </TRPCReactProvider>
